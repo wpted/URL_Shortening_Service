@@ -1,0 +1,15 @@
+syntax = "proto3";
+option go_package = "/gen";
+
+message GetKeyMetadataRequest {
+  int64 RequiredKeys = 1;
+}
+
+message GetKeyMetadataResponse {
+  bool Success = 1;
+  repeated string Keys = 2;
+}
+
+service KeyGenerationService {
+  rpc GetKeyMetadata(GetKeyMetadataRequest) returns (GetKeyMetadataResponse);
+}
