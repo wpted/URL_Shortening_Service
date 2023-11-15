@@ -6,26 +6,26 @@ import (
 	"sync"
 )
 
-// letterBytes contains all possible characters for generating a Key.
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+// LetterBytes contains all possible characters for generating a Key.
+const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // KGS is the core for Key Generation Service.
 type KGS struct {
 	db repository.KGSDatabase
 }
 
-// NewKGS creates a new instance of KGS and generate keys concurrently to the database.
-func NewKGS(size int, db repository.KGSDatabase) (*KGS, error) {
+// New creates a new instance of KGS and generate keys concurrently to the database.
+func New(db repository.KGSDatabase, poolSize int, keyLength int) (*KGS, error) {
 	kgs := &KGS{db: db}
 	var wg sync.WaitGroup
 
-	for i := 0; i < size; i++ {
+	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
 			for {
-				key := generateKey(4)
+				key := generateKey(keyLength)
 				exist, err := kgs.db.KeyExist(key)
 				if err != nil {
 					// log the error and continue
@@ -56,7 +56,7 @@ func generateKey(length int) string {
 	res := make([]byte, length)
 
 	for i := 0; i < length; i++ {
-		res[i] = letterBytes[rand.Intn(len(letterBytes))]
+		res[i] = LetterBytes[rand.Intn(len(LetterBytes))]
 	}
 	return string(res)
 }
