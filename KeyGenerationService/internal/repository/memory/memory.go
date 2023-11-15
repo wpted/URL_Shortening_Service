@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"KeyGenerationService/internal/repository"
 	"sync"
 )
 
@@ -41,6 +42,11 @@ func (i *InMemoryDB) WriteKey(key string) error {
 // GetKeys fetches an array of keys.
 // The fetched keys are considered used and will be moved to UsedKeys for further usage.
 func (i *InMemoryDB) GetKeys(requiredKeys int) ([]string, error) {
+	if requiredKeys <= 0 {
+		return []string{}, repository.ErrNegativeKey
+	}
+
+	// TODO: What if requiredKeys is greater than the amount of valid keys left?
 	result := make([]string, requiredKeys)
 	// Get keys randomly, and move used keys to used map.
 	j := 0
