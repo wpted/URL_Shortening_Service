@@ -28,8 +28,7 @@ func (i *InMemoryDB) KeyExist(key string) (bool, error) {
 	if _, ok := i.UsedKeys.Load(key); ok {
 		return true, nil
 	}
-	// TODO: Return not found error.
-	return false, nil
+	return false, repository.ErrKeyNotFound
 }
 
 // WriteKey stores the given key to InMemoryDB.
