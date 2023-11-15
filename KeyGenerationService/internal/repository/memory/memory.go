@@ -12,11 +12,11 @@ type InMemoryDB struct {
 }
 
 // New creates a new instance of InMemoryDB.
-func New() *InMemoryDB {
+func New() (*InMemoryDB, error) {
 	return &InMemoryDB{
 		Keys:     sync.Map{},
 		UsedKeys: sync.Map{},
-	}
+	}, nil
 }
 
 // KeyExist checks whether a key exist within InMemoryDB.
