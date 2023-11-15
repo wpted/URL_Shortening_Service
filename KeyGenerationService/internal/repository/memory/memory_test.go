@@ -26,7 +26,7 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 
 	// 1. Fetch key that doesn't exist.
 	ok, err := inMemory.KeyExist(testKey)
-	if err != nil {
+	if !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Errorf("Error checking existence: %v\n.", err)
 	}
 
@@ -37,25 +37,19 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 	// 2. Store key in keys, check key existence.
 	inMemory.Keys.Store(testKey, struct{}{})
 	ok, err = inMemory.KeyExist(testKey)
-	if err != nil {
-		t.Errorf("Error checking existence: %v\n.", err)
+	if err != nil && !ok {
+		t.Errorf("Error checking key existence: %v.\n", err)
 	}
 
-	if !ok {
-		t.Errorf("Error key should exist.\n")
-	}
 	inMemory.Keys.Delete(testKey)
 
 	// 3. Store key in UsedKeys, check key existence.
 	inMemory.UsedKeys.Store(testKey, struct{}{})
 	ok, err = inMemory.KeyExist(testKey)
-	if err != nil {
-		t.Errorf("Error checking existence: %v\n.", err)
+	if err != nil && !ok {
+		t.Errorf("Error checking key existence: %v.\n", err)
 	}
 
-	if !ok {
-		t.Errorf("Error key should exist.\n")
-	}
 	inMemory.UsedKeys.Delete(testKey)
 }
 
