@@ -9,7 +9,7 @@ import (
 func TestNew(t *testing.T) {
 	db, err := New()
 	if err != nil {
-		t.Errorf("Error shouldn't have error on creating a new in-memory database")
+		t.Errorf("Error shouldn't have an error when creating a new in-memory database.\n")
 	}
 	if db == nil {
 		t.Errorf("Error shouldn't have nil in-memory database.")
@@ -27,11 +27,11 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 	// 1. Fetch key that doesn't exist.
 	ok, err := inMemory.KeyExist(testKey)
 	if !errors.Is(err, repository.ErrKeyNotFound) {
-		t.Errorf("Error checking existence: %v\n.", err)
+		t.Errorf("Error wrong error: Have %v, want %v.\n", err, repository.ErrKeyNotFound)
 	}
 
 	if ok {
-		t.Errorf("Error fetched unwanted key.\n")
+		t.Errorf("Error shouldn't have fetched key that doesn't exist.\n")
 	}
 
 	// 2. Store key in keys, check key existence.
@@ -91,8 +91,11 @@ func TestInMemoryDB_GetKeys(t *testing.T) {
 	for _, requiredKeys := range cases {
 		result, err := inMemory.GetKeys(requiredKeys)
 		if err != nil {
-			if !errors.Is(err, repository.ErrNegativeKey) {
+			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
 				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)
+			}
+			if requiredKeys > 0 && !errors.Is(err, repository.ErrKeyOutOfRange) {
+				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOutOfRange)
 			}
 		} else {
 			if len(result) != requiredKeys {
