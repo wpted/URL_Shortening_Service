@@ -10,6 +10,8 @@ type KGSDatabase interface {
 }
 
 var (
-	ErrKeyNotFound = errors.New("error desired key isn't found in database")
-	ErrNegativeKey = errors.New("error cannot have 0 or negative requiredKeys")
+	ErrKeyNotFound   = errors.New("error desired key isn't found in database")
+	ErrDatabaseError = errors.New("error malfunction of connecting to or using a database")
+	ErrNegativeKey   = errors.New("error cannot have 0 or negative requiredKeys")
+	ErrKeyOutOfRange = errors.New("error usable key isn't enough")
 )
