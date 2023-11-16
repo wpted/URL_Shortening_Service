@@ -2,6 +2,7 @@ package memory
 
 import (
 	"KeyGenerationService/internal/repository"
+	"context"
 	"sync"
 )
 
@@ -21,7 +22,7 @@ func New() (*InMemoryDB, error) {
 }
 
 // KeyExist checks whether a key exist within InMemoryDB.
-func (i *InMemoryDB) KeyExist(key string) (bool, error) {
+func (i *InMemoryDB) KeyExist(ctx context.Context, key string) (bool, error) {
 	if _, ok := i.Keys.Load(key); ok {
 		return true, nil
 	}
@@ -32,7 +33,7 @@ func (i *InMemoryDB) KeyExist(key string) (bool, error) {
 }
 
 // WriteKey stores the given key to InMemoryDB.
-func (i *InMemoryDB) WriteKey(key string) error {
+func (i *InMemoryDB) WriteKey(ctx context.Context, key string) error {
 	i.Keys.Store(key, struct{}{})
 
 	return nil
@@ -40,7 +41,7 @@ func (i *InMemoryDB) WriteKey(key string) error {
 
 // GetKeys fetches an array of keys.
 // The fetched keys are considered used and will be moved to UsedKeys for further usage.
-func (i *InMemoryDB) GetKeys(requiredKeys int) ([]string, error) {
+func (i *InMemoryDB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	// Cannot have negative or zero requiredKeys.
 	if requiredKeys <= 0 {
 		return []string{}, repository.ErrNegativeKey

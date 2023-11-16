@@ -2,6 +2,7 @@ package psql
 
 import (
 	"KeyGenerationService/internal/repository"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -25,7 +26,7 @@ func New(user, password, database string) (*DB, error) {
 }
 
 // KeyExist checks whether a key exist within DB.
-func (d *DB) KeyExist(key string) (bool, error) {
+func (d *DB) KeyExist(ctx context.Context, key string) (bool, error) {
 	var value string
 	inKeys, inUsedKeys := true, true
 
@@ -61,7 +62,7 @@ func (d *DB) KeyExist(key string) (bool, error) {
 }
 
 // WriteKey stores the given key to DB.
-func (d *DB) WriteKey(key string) error {
+func (d *DB) WriteKey(ctx context.Context, key string) error {
 	query := "INSERT INTO keys(values) VALUES($1)"
 	_, err := d.db.Exec(query, key)
 	if err != nil {
@@ -73,7 +74,7 @@ func (d *DB) WriteKey(key string) error {
 
 // GetKeys fetches an array of keys.
 // The fetched keys are considered used and will be moved to used_keys for further usage.
-func (d *DB) GetKeys(requiredKeys int) ([]string, error) {
+func (d *DB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	// Cannot have negative or zero requiredKeys.
 	if requiredKeys <= 0 {
 		return []string{}, repository.ErrNegativeKey

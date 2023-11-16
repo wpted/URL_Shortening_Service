@@ -2,6 +2,7 @@ package memory
 
 import (
 	"KeyGenerationService/internal/repository"
+	"context"
 	"errors"
 	"testing"
 )
@@ -21,11 +22,12 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error initializing in-memory database: %v.\n", err)
 	}
+	ctx := context.Background()
 
 	testKey := "1234"
 
 	// 1. Fetch key that doesn't exist.
-	ok, err := inMemory.KeyExist(testKey)
+	ok, err := inMemory.KeyExist(ctx, testKey)
 	if !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Errorf("Error wrong error: Have %v, want %v.\n", err, repository.ErrKeyNotFound)
 	}
@@ -36,7 +38,7 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 
 	// 2. Store key in keys, check key existence.
 	inMemory.Keys.Store(testKey, struct{}{})
-	ok, err = inMemory.KeyExist(testKey)
+	ok, err = inMemory.KeyExist(ctx, testKey)
 	if err != nil && !ok {
 		t.Errorf("Error checking key existence: %v.\n", err)
 	}
@@ -45,7 +47,7 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 
 	// 3. Store key in UsedKeys, check key existence.
 	inMemory.UsedKeys.Store(testKey, struct{}{})
-	ok, err = inMemory.KeyExist(testKey)
+	ok, err = inMemory.KeyExist(ctx, testKey)
 	if err != nil && !ok {
 		t.Errorf("Error checking key existence: %v.\n", err)
 	}
@@ -58,10 +60,11 @@ func TestInMemoryDB_WriteKey(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error initializing in-memory database: %v.\n", err)
 	}
+	ctx := context.Background()
 
 	testKey := "1234"
 
-	err = inMemory.WriteKey(testKey)
+	err = inMemory.WriteKey(ctx, testKey)
 	if err != nil {
 		t.Errorf("Error writing key to in-memory database: %v.\n", err)
 	}
@@ -78,6 +81,7 @@ func TestInMemoryDB_GetKeys(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error initializing in-memory database: %v.\n", err)
 	}
+	ctx := context.Background()
 
 	testKeys := []string{"0123", "1234", "2345", "3456", "4567", "5678", "6789", "7890"}
 	for _, key := range testKeys {
@@ -89,7 +93,7 @@ func TestInMemoryDB_GetKeys(t *testing.T) {
 	cases := []int{-1, 0, 1, 3, 10}
 
 	for _, requiredKeys := range cases {
-		result, err := inMemory.GetKeys(requiredKeys)
+		result, err := inMemory.GetKeys(ctx, requiredKeys)
 		if err != nil {
 			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
 				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)

@@ -2,6 +2,7 @@ package psql
 
 import (
 	"KeyGenerationService/internal/repository"
+	"context"
 	"database/sql"
 	"errors"
 	"testing"
@@ -30,8 +31,9 @@ func TestDB_KeyExist(t *testing.T) {
 
 	testKey := "test_key"
 
+	ctx := context.Background()
 	// 1. Fetch key that doesn't exist.
-	ok, err := db.KeyExist(testKey)
+	ok, err := db.KeyExist(ctx, testKey)
 	if err != nil && !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Errorf("Error wrong error: Have %v, want %v.\n", err, repository.ErrKeyNotFound)
 	}
@@ -42,7 +44,7 @@ func TestDB_KeyExist(t *testing.T) {
 
 	// 2. Store key in keys, check key existence.
 	_, _ = db.db.Exec("INSERT INTO keys(values) VALUES ($1)", testKey)
-	ok, err = db.KeyExist(testKey)
+	ok, err = db.KeyExist(ctx, testKey)
 	if err != nil && !errors.Is(err, repository.ErrKeyNotFound) {
 		// Database error.
 		t.Errorf("Error checking key existence: %v.\n", err)
@@ -55,7 +57,7 @@ func TestDB_KeyExist(t *testing.T) {
 
 	// 3. Store key in UsedKeys, check key existence.
 	_, _ = db.db.Exec("INSERT INTO used_keys(values) VALUES ($1)", testKey)
-	ok, err = db.KeyExist(testKey)
+	ok, err = db.KeyExist(ctx, testKey)
 	if err != nil && !errors.Is(err, repository.ErrKeyNotFound) {
 		// Database error.
 		t.Errorf("Error checking key existence: %v.\n", err)
@@ -72,9 +74,10 @@ func TestDB_WriteKey(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error shouldn't have an error when creating instance DB.\n")
 	}
+	ctx := context.Background()
 
 	testKey := "test_key"
-	err = db.WriteKey(testKey)
+	err = db.WriteKey(ctx, testKey)
 	if err != nil {
 		t.Errorf("Error writing key to database: %v.\n", err)
 	}
@@ -103,10 +106,13 @@ func TestDB_GetKeys(t *testing.T) {
 	for _, testKey := range testKeys {
 		_, _ = db.db.Exec("INSERT INTO keys(values) VALUES ($1)", testKey)
 	}
+
+	ctx := context.Background()
+
 	// Shouldn't have requiredKeysCases greater than existing testKeys. (Should check if there's enough key and update periodically.)
 	requiredKeysCases := []int{-1, 0, 1, 3, 10}
 	for _, requiredKeys := range requiredKeysCases {
-		keys, err := db.GetKeys(requiredKeys)
+		keys, err := db.GetKeys(ctx, requiredKeys)
 		if err != nil {
 			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
 				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)
