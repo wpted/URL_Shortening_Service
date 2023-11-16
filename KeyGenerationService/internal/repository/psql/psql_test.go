@@ -110,7 +110,8 @@ func TestDB_GetKeys(t *testing.T) {
 		if err != nil {
 			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
 				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)
-			} else if requiredKeys > 0 && !errors.Is(err, repository.ErrKeyOutOfRange) {
+			}
+			if requiredKeys > len(testKeys) && !errors.Is(err, repository.ErrKeyOutOfRange) {
 				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOutOfRange)
 			}
 		} else {
@@ -120,6 +121,6 @@ func TestDB_GetKeys(t *testing.T) {
 		}
 	}
 
-	// Clean the table
+	// Clean the table.
 	_, _ = db.db.Exec("DELETE FROM keys")
 }
