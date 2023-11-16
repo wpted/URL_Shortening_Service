@@ -41,11 +41,24 @@ func (i *InMemoryDB) WriteKey(key string) error {
 // GetKeys fetches an array of keys.
 // The fetched keys are considered used and will be moved to UsedKeys for further usage.
 func (i *InMemoryDB) GetKeys(requiredKeys int) ([]string, error) {
+	// Cannot have negative or zero requiredKeys.
 	if requiredKeys <= 0 {
 		return []string{}, repository.ErrNegativeKey
 	}
 
-	// TODO: What if requiredKeys is greater than the amount of valid keys left?
+	// Cannot have requiredKeys greater than what we have in 'keys'.
+	// This shouldn't happen since we always assume that we have enough keys in pool waiting.
+	var mapLength int
+	i.Keys.Range(func(_, _ any) bool {
+		mapLength++
+		return true
+	})
+
+	if requiredKeys > mapLength {
+		return []string{}, repository.ErrKeyOutOfRange
+	}
+
+	// Create an array that stores all fetched keys.
 	result := make([]string, requiredKeys)
 	// Get keys randomly, and move used keys to used map.
 	j := 0
