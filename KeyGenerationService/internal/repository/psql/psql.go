@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-
 	_ "github.com/lib/pq"
 )
 
@@ -77,7 +76,7 @@ func (d *DB) WriteKey(ctx context.Context, key string) error {
 func (d *DB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	// Cannot have negative or zero requiredKeys.
 	if requiredKeys <= 0 {
-		return []string{}, repository.ErrNegativeKey
+		return []string{}, repository.ErrKeyOOR
 	}
 
 	// Cannot have requiredKeys greater than what we have in 'keys'.
@@ -95,7 +94,7 @@ func (d *DB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	}
 	_ = rows.Close()
 	if requiredKeys > count {
-		return []string{}, repository.ErrKeyOutOfRange
+		return []string{}, repository.ErrKeyOOR
 	}
 
 	// Create an array that stores all fetched keys.
@@ -129,4 +128,8 @@ func (d *DB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	_ = rows.Close()
 
 	return result, nil
+}
+
+func (d *DB) CleanUp() {
+	_, _ = d.db.Exec("DELETE FROM keys")
 }
