@@ -4,6 +4,7 @@ import (
 	"KeyGenerationService/internal/repository"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math/rand"
 	"sync"
@@ -16,8 +17,17 @@ const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456
 var (
 	ErrRepoError        = errors.New("error repo failed")
 	ErrInvalidKeyLength = errors.New("error cannot have key length equal or smaller than 0")
+	ErrInvalidPoolSize  = errors.New("error cannot have pool size smaller than 0")
 	ErrGetKeysError     = errors.New("error getting keys from database")
 )
+
+type KGSError struct {
+	Err error
+}
+
+func (e *KGSError) Error() string {
+	return e.Err.Error()
+}
 
 // KGS is the core for Key Generation Service.
 type KGS struct {
@@ -26,6 +36,10 @@ type KGS struct {
 
 // New creates a new instance of KGS and generate keys concurrently to the database.
 func New(db repository.KGSDatabase, defaultPoolSize int, keyLength int) (*KGS, error) {
+	if defaultPoolSize < 0 {
+		return nil, ErrInvalidPoolSize
+	}
+
 	// PostgreSQL has a default limit of 115 concurrent connections.
 	// If connection(read/write goroutines) exceeded the limit,
 	// it triggers the "FATAL: sorry, too many clients already" error, causing incoming connections to be rejected.
@@ -61,8 +75,6 @@ func New(db repository.KGSDatabase, defaultPoolSize int, keyLength int) (*KGS, e
 				}
 				exist, err := kgs.db.KeyExist(ctx, key)
 				if err != nil && !errors.Is(err, repository.ErrKeyNotFound) {
-					// send error to errChan, then shut the program
-					log.Println(err)
 					errChan <- ErrRepoError
 					return
 				}
@@ -70,8 +82,6 @@ func New(db repository.KGSDatabase, defaultPoolSize int, keyLength int) (*KGS, e
 				if !exist {
 					err = kgs.db.WriteKey(ctx, key)
 					if err != nil {
-						// send error to errChan, then shut the program
-						log.Println(err)
 						errChan <- ErrRepoError
 						return
 					}
@@ -117,7 +127,11 @@ func (k *KGS) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	defer cancel()
 	keys, err := k.db.GetKeys(ctrlCtx, requiredKeys)
 	if err != nil {
-		// TODO: Log the error
+		if errors.Is(err, repository.ErrKeyOOR) {
+			return nil, &KGSError{Err: fmt.Errorf("%s: %w.\n", "Get keys error", repository.ErrKeyOOR)}
+		}
+		// TODO: Log the unexpected error.
+		log.Println(err)
 		return nil, ErrGetKeysError
 	}
 
