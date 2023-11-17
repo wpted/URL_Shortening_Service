@@ -15,7 +15,7 @@ func TestNew(t *testing.T) {
 	// TODO: Replace the credentials.
 	db, err := New("URLShortenerUser", "URLShortenerPassword", "KeyGenerationService")
 	if err != nil {
-		t.Errorf("Error shouldn't have an error when creating instance DB.\n")
+		t.Errorf("Error creating instance DB.\n")
 	}
 
 	if db == nil {
@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 func TestDB_KeyExist(t *testing.T) {
 	db, err := New("URLShortenerUser", "URLShortenerPassword", "KeyGenerationService")
 	if err != nil {
-		t.Errorf("Error shouldn't have an error when creating instance DB.\n")
+		t.Errorf("Error creating instance DB.\n")
 	}
 
 	testKey := "test_key"
@@ -72,7 +72,7 @@ func TestDB_KeyExist(t *testing.T) {
 func TestDB_WriteKey(t *testing.T) {
 	db, err := New("URLShortenerUser", "URLShortenerPassword", "KeyGenerationService")
 	if err != nil {
-		t.Errorf("Error shouldn't have an error when creating instance DB.\n")
+		t.Errorf("Error creating instance DB.\n")
 	}
 	ctx := context.Background()
 
@@ -99,7 +99,7 @@ func TestDB_WriteKey(t *testing.T) {
 func TestDB_GetKeys(t *testing.T) {
 	db, err := New("URLShortenerUser", "URLShortenerPassword", "KeyGenerationService")
 	if err != nil {
-		t.Errorf("Error shouldn't have an error when creating instance DB.\n")
+		t.Errorf("Error creating instance DB.\n")
 	}
 	testKeys := []string{"test_key1", "test_key2", "test_key3", "test_key4", "test_key5", "test_key6"}
 
@@ -114,11 +114,11 @@ func TestDB_GetKeys(t *testing.T) {
 	for _, requiredKeys := range requiredKeysCases {
 		keys, err := db.GetKeys(ctx, requiredKeys)
 		if err != nil {
-			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
-				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)
+			if requiredKeys <= 0 && !errors.Is(err, repository.ErrKeyOOR) {
+				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOOR)
 			}
-			if requiredKeys > len(testKeys) && !errors.Is(err, repository.ErrKeyOutOfRange) {
-				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOutOfRange)
+			if requiredKeys > len(testKeys) && !errors.Is(err, repository.ErrKeyOOR) {
+				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOOR)
 			}
 		} else {
 			if len(keys) != requiredKeys {
