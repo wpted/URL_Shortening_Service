@@ -10,7 +10,7 @@ import (
 func TestNew(t *testing.T) {
 	db, err := New()
 	if err != nil {
-		t.Errorf("Error shouldn't have an error when creating a new in-memory database.\n")
+		t.Errorf("Error creating a new in-memory database: %v.\n", err)
 	}
 	if db == nil {
 		t.Errorf("Error shouldn't have nil in-memory database.")
@@ -18,16 +18,16 @@ func TestNew(t *testing.T) {
 }
 
 func TestInMemoryDB_KeyExist(t *testing.T) {
-	inMemory, err := New()
+	db, err := New()
 	if err != nil {
-		t.Errorf("Error initializing in-memory database: %v.\n", err)
+		t.Errorf("Error creating a new in-memory database: %v.\n", err)
 	}
 	ctx := context.Background()
 
 	testKey := "1234"
 
 	// 1. Fetch key that doesn't exist.
-	ok, err := inMemory.KeyExist(ctx, testKey)
+	ok, err := db.KeyExist(ctx, testKey)
 	if !errors.Is(err, repository.ErrKeyNotFound) {
 		t.Errorf("Error wrong error: Have %v, want %v.\n", err, repository.ErrKeyNotFound)
 	}
@@ -37,28 +37,28 @@ func TestInMemoryDB_KeyExist(t *testing.T) {
 	}
 
 	// 2. Store key in keys, check key existence.
-	inMemory.Keys.Store(testKey, struct{}{})
-	ok, err = inMemory.KeyExist(ctx, testKey)
+	db.Keys.Store(testKey, struct{}{})
+	ok, err = db.KeyExist(ctx, testKey)
 	if err != nil && !ok {
 		t.Errorf("Error checking key existence: %v.\n", err)
 	}
 
-	inMemory.Keys.Delete(testKey)
+	db.Keys.Delete(testKey)
 
 	// 3. Store key in UsedKeys, check key existence.
-	inMemory.UsedKeys.Store(testKey, struct{}{})
-	ok, err = inMemory.KeyExist(ctx, testKey)
+	db.UsedKeys.Store(testKey, struct{}{})
+	ok, err = db.KeyExist(ctx, testKey)
 	if err != nil && !ok {
 		t.Errorf("Error checking key existence: %v.\n", err)
 	}
 
-	inMemory.UsedKeys.Delete(testKey)
+	db.UsedKeys.Delete(testKey)
 }
 
 func TestInMemoryDB_WriteKey(t *testing.T) {
 	inMemory, err := New()
 	if err != nil {
-		t.Errorf("Error initializing in-memory database: %v.\n", err)
+		t.Errorf("Error creating a new in-memory database: %v.\n", err)
 	}
 	ctx := context.Background()
 
@@ -79,7 +79,7 @@ func TestInMemoryDB_WriteKey(t *testing.T) {
 func TestInMemoryDB_GetKeys(t *testing.T) {
 	inMemory, err := New()
 	if err != nil {
-		t.Errorf("Error initializing in-memory database: %v.\n", err)
+		t.Errorf("Error creating a new in-memory database: %v.\n", err)
 	}
 	ctx := context.Background()
 
@@ -95,11 +95,8 @@ func TestInMemoryDB_GetKeys(t *testing.T) {
 	for _, requiredKeys := range cases {
 		result, err := inMemory.GetKeys(ctx, requiredKeys)
 		if err != nil {
-			if requiredKeys <= 0 && !errors.Is(err, repository.ErrNegativeKey) {
-				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrNegativeKey)
-			}
-			if requiredKeys > 0 && !errors.Is(err, repository.ErrKeyOutOfRange) {
-				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOutOfRange)
+			if (requiredKeys <= 0 || requiredKeys > len(testKeys)) && !errors.Is(err, repository.ErrKeyOOR) {
+				t.Errorf("Error incorrect error: Have %v, want %v.\n", err, repository.ErrKeyOOR)
 			}
 		} else {
 			if len(result) != requiredKeys {

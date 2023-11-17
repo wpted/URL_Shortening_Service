@@ -44,7 +44,7 @@ func (i *InMemoryDB) WriteKey(ctx context.Context, key string) error {
 func (i *InMemoryDB) GetKeys(ctx context.Context, requiredKeys int) ([]string, error) {
 	// Cannot have negative or zero requiredKeys.
 	if requiredKeys <= 0 {
-		return []string{}, repository.ErrNegativeKey
+		return []string{}, repository.ErrKeyOOR
 	}
 
 	// Cannot have requiredKeys greater than what we have in 'keys'.
@@ -56,7 +56,7 @@ func (i *InMemoryDB) GetKeys(ctx context.Context, requiredKeys int) ([]string, e
 	})
 
 	if requiredKeys > mapLength {
-		return []string{}, repository.ErrKeyOutOfRange
+		return []string{}, repository.ErrKeyOOR
 	}
 
 	// Create an array that stores all fetched keys.
